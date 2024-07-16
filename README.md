@@ -2,7 +2,8 @@
 
 ## Create a new go module
 ```bash
-cd github.com/darashevcstbg/gqlgen-client2
+mkdir gqlgen-client2
+cd gqlgen-client2
 go mod init github.com/darashevcstbg/gqlgen-client2
 ```
 
@@ -19,17 +20,11 @@ go run github.com/99designs/gqlgen init
 go mod tidy
 ```
 
-## Start the graphql server
+## Modify the graph/schema.graphqls file
 
-```bash
-go run server.go
-```
+Add your schema to the graph/schema.graphqls file, also extend the Query and Mutation types
 
-## Modify the graph/schema.graphql file
-
-Add your schema to the graph/schema.graphql file, also extend the Query and Mutation types
-
-## Create the generate/generate.go file, update the MODELS_PATH with the path to client models (e.g. github.com/darashevcstbg/gqlgen-client/graph/model)
+## Create generate/generate.go file, replace the MODELS_PATH variable with the path to client models (e.g. github.com/darashevcstbg/gqlgen-client2/graph/model)
 
 ```go
 package main
@@ -64,10 +59,9 @@ func main() {
 
 ```bash
 go get github.com/darashevcstbg/gqlgen
-go get github.com/darashevcstbg/gqlgen-client/graph/model
 ```
 
-## Create the Meetup schema graph-lib/meetup.graphql
+## Create the Meetup schema graph-lib/meetup.graphqls
 
 ```graphql
 type Meetup {
@@ -102,7 +96,6 @@ type Mutation {
     createMeetup(input: NewMeetup!): Meetup!
     createUser(input: NewUser!): User!
 }
-
 ```
 
 ### Update the graph/resolver.go to use the generate/generated.go file
@@ -127,11 +120,19 @@ schema:
   - graph-lib/*.graphqls
 ```
 
-```graphql
+### Delete the old schema resolver 
+```bash
+rm -f graph/schema.resolvers.go
+```
 
-## Execute go generate
+### Execute go generate
 
 ```bash
 go generate ./...
 ```
 
+## Start the graphql server
+
+```bash
+go run server.go
+```
