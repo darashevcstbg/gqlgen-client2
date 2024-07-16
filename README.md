@@ -1,138 +1,181 @@
-# Creation steps
+# Setting Up a New Go Module with gqlgen
 
-## Create a new go module
-```bash
-mkdir gqlgen-client2
-cd gqlgen-client2
-go mod init github.com/darashevcstbg/gqlgen-client2
-```
+## Step 1: Create a New Go Module
 
-## Add github.com/99designs/gqlgen to your project’s tools.go
+1. Create and navigate to a new directory for your project:
+    ```bash
+    mkdir gqlgen-client2
+    cd gqlgen-client2
+    ```
 
-```bash
-printf '//go:build tools\npackage tools\nimport (_ "github.com/99designs/gqlgen"\n _ "github.com/99designs/gqlgen/graphql/introspection")' | gofmt > tools.go
-go mod tidy
-```
+2. Initialize a new Go module:
+    ```bash
+    go mod init github.com/darashevcstbg/gqlgen-client2
+    ```
 
-## Initialise gqlgen config and generate models
-```bash
-go run github.com/99designs/gqlgen init
-go mod tidy
-```
+## Step 2: Add gqlgen to Your Project’s tools.go
 
-## Modify the graph/schema.graphqls file
+1. Add gqlgen and introspection to `tools.go`:
+    ```bash
+    printf '//go:build tools\npackage tools\nimport (_ "github.com/99designs/gqlgen"\n _ "github.com/99designs/gqlgen/graphql/introspection")' | gofmt > tools.go
+    ```
 
-Add your schema to the graph/schema.graphqls file, also extend the Query and Mutation types
+2. Tidy up the module dependencies:
+    ```bash
+    go mod tidy
+    ```
 
-## Create generate/generate.go file, replace the MODELS_PATH variable with the path to client models (e.g. github.com/darashevcstbg/gqlgen-client2/graph/model)
+## Step 3: Initialize gqlgen Config and Generate Models
 
-```go
-package main
+1. Initialize gqlgen configuration and generate initial models:
+    ```bash
+    go run github.com/99designs/gqlgen init
+    ```
 
-import (
-	"fmt"
-	"os"
+2. Tidy up the module dependencies again:
+    ```bash
+    go mod tidy
+    ```
 
-	"github.com/99designs/gqlgen/api"
-	"github.com/99designs/gqlgen/codegen/config"
-	"github.com/darashevcstbg/gqlgen/plugins/gqlgen_plugin"
-)
+## Step 4: Modify the GraphQL Schema
 
-func main() {
-	cfg, err := config.LoadConfigFromDefaultLocations()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "failed to load config", err.Error())
-		os.Exit(2)
-	}
+1. Open the `graph/schema.graphqls` file.
 
-	err = api.Generate(cfg,
-		api.AddPlugin(gqlgen_plugin.New("graph/meetup.resolvers.go", "MODELS_PATH")),
-	)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(3)
-	}
-}
-```
+2. **Add your schema definitions and extend the `Query` and `Mutation` types:**
 
-## Get the gqlgen library
+    ```graphql
+    extend type Query {
+        # Add your query fields here
+    }
 
-```bash
-go get github.com/darashevcstbg/gqlgen
-```
+    extend type Mutation {
+        # Add your mutation fields here
+    }
+    ```
 
-## Create the Meetup schema graph-lib/meetup.graphqls
+## Step 5: Create a Custom Code Generator
 
-```graphql
-type Meetup {
-    id: ID!
-    name: String!
-    description: String!
-    user: User!
-}
+1. Create a `generate/generate.go` file with the following content:
 
-input NewMeetup {
-    name: String!
-    description: String!
-}
+    ```go
+    package main
 
-type User {
-    id: ID!
-    username: String!
-    email: String!
-    meetups: [Meetup!]!
-}
+    import (
+        "fmt"
+        "os"
+        "github.com/99designs/gqlgen/api"
+        "github.com/99designs/gqlgen/codegen/config"
+        "github.com/darashevcstbg/gqlgen/plugins/gqlgen_plugin"
+    )
 
-type Query {
-    meetups: [Meetup!]!
-    users: [User!]!
-}
+    func main() {
+        cfg, err := config.LoadConfigFromDefaultLocations()
+        if err != nil {
+            fmt.Fprintln(os.Stderr, "failed to load config", err.Error())
+            os.Exit(2)
+        }
 
-input NewUser {
-    username: String!
-    email: String!
-}
-type Mutation {
-    createMeetup(input: NewMeetup!): Meetup!
-    createUser(input: NewUser!): User!
-}
-```
+        err = api.Generate(cfg,
+            api.AddPlugin(gqlgen_plugin.New("graph/meetup.resolvers.go", "MODELS_PATH")),
+        )
+        if err != nil {
+            fmt.Fprintln(os.Stderr, err.Error())
+            os.Exit(3)
+        }
+    }
+    ```
 
-### Update the graph/resolver.go to use the generate/generated.go file
+2. Replace the `MODELS_PATH` variable with the path to your client models, e.g., `github.com/darashevcstbg/gqlgen-client2/graph/model`.
 
-```go
-package graph
+## Step 6: Install the Custom gqlgen Library
 
-//go:generate go run ../generate/generate.go
+1. Get the gqlgen library:
+    ```bash
+    go get github.com/darashevcstbg/gqlgen
+    ```
 
-// This file will not be regenerated automatically.
-//
-// It serves as dependency injection for your app, add any dependencies you require here.
+## Step 7: Define the Meetup Schema
 
-type Resolver struct{}
-```
+1. Create a schema file `graph-lib/meetup.graphqls` with the following content:
 
-### Add the graph-lib/*.graphqls schemas to the gqlgen.yml file
+    ```graphql
+    type Meetup {
+        id: ID!
+        name: String!
+        description: String!
+        user: User!
+    }
 
-```yaml
-schema:
-  - graph/*.graphqls
-  - graph-lib/*.graphqls
-```
+    input NewMeetup {
+        name: String!
+        description: String!
+    }
 
-### Delete the old schema resolver 
-```bash
-rm -f graph/schema.resolvers.go
-```
+    type User {
+        id: ID!
+        username: String!
+        email: String!
+        meetups: [Meetup!]!
+    }
 
-### Execute go generate
+    type Query {
+        meetups: [Meetup!]!
+        users: [User!]!
+    }
 
-```bash
-go generate ./...
-```
+    input NewUser {
+        username: String!
+        email: String!
+    }
 
-## Start the graphql server
+    type Mutation {
+        createMeetup(input: NewMeetup!): Meetup!
+        createUser(input: NewUser!): User!
+    }
+    ```
 
-```bash
-go run server.go
-```
+## Step 8: Update the Resolver
+
+1. Update the `graph/resolver.go` to use the generated file:
+
+    ```go
+    package graph
+
+    //go:generate go run ../generate/generate.go
+
+    // This file will not be regenerated automatically.
+    // It serves as dependency injection for your app, add any dependencies you require here.
+
+    type Resolver struct{}
+    ```
+
+## Step 9: Configure gqlgen
+
+1. Add the new schema file to `gqlgen.yml`:
+
+    ```yaml
+    schema:
+      - graph/*.graphqls
+      - graph-lib/*.graphqls
+    ```
+
+## Step 10: Clean Up Old Schema Resolvers
+
+1. Delete the old schema resolver file:
+    ```bash
+    rm -f graph/schema.resolvers.go
+    ```
+
+## Step 11: Generate Code
+
+1. Execute the code generation:
+    ```bash
+    go generate ./...
+    ```
+
+## Step 12: Start the GraphQL Server
+
+1. Run the GraphQL server:
+    ```bash
+    go run server.go
+    ```
