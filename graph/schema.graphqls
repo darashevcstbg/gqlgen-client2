@@ -9,25 +9,75 @@ type Todo {
   user: User!
 }
 
-type User {
-  id: ID!
-  name: String!
-}
-
-type Query {
-  todos: [Todo!]!
-}
-
 input NewTodo {
   text: String!
   userId: String!
 }
 
-type Mutation {
+extend type Mutation {
   createTodo(input: NewTodo!): Todo!
+  createComment(input: NewComment!): Comment!
+  createPost(input: NewPost!): Post!
+  createProfile(input: NewProfile!): Profile!
+  createNotification(input: NewNotification!): Notification!
 }
 
-type Subscription {
-  todoCreated: Todo!
+extend type Query {
+  todos: [Todo!]!
+  comments: [Comment!]!
+  posts: [Post!]!
+  profiles: [Profile!]!
+  notifications: [Notification!]!
+}
+
+
+type Comment {
+  id: ID!
+  content: String!
+  author: User!
+  post: Post!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User!
+  comments: [Comment!]!
+}
+
+type Profile {
+  id: ID!
+  bio: String!
+  user: User!
+}
+
+type Notification {
+  id: ID!
+  message: String!
+  user: User!
+  createdAt: String!
+}
+
+input NewComment {
+  content: String!
+  authorId: String!
+  postId: String!
+}
+
+input NewPost {
+  title: String!
+  content: String!
+  authorId: String!
+}
+
+input NewProfile {
+  bio: String!
+  userId: String!
+}
+
+input NewNotification {
+  message: String!
+  userId: String!
 }
 

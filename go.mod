@@ -1,9 +1,12 @@
-module gqlgen-client2
+module github.com/darashevcstbg/gqlgen-client2
 
-go 1.21.10
+go 1.22.2
+
+toolchain go1.22.5
 
 require (
 	github.com/99designs/gqlgen v0.17.49
+	github.com/darashevcstbg/gqlgen v0.13.0
 	github.com/vektah/gqlparser/v2 v2.5.16
 )
 
